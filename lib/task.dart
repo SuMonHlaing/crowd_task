@@ -36,4 +36,34 @@ class Task {
   bool get isDoing => accepted == true && completed == null;
   bool get isRequested => accepted == null;
   bool get isCompleted => completed != null;
+
+
+  factory Task.fromJson(dynamic json) {
+    DateTime? _completedDate;
+    if (json['completed'] != null && json['completed'] != 'null') {
+      _completedDate = DateTime.parse(json['completed']);
+    }
+    return Task(
+      uuid: json['uuid'] as String,
+      description: json['description'] as String,
+      dueDate: DateTime.parse(json['dueDate']),
+      accepted: json['accepted'] as bool?,
+      completed: _completedDate,
+      client: Client.fromJson(json['client']),
+    );
+  }
+
+  Map<String,dynamic> toJson() {
+    Map _client = client!.toJson();
+    var jsonObj = {
+      'uuid': uuid,
+      'description': description,
+      'dueDate': dueDate.toString(),
+      'accepted': accepted,
+      'completed': completed.toString(),
+      'client': _client,
+    };
+    return jsonObj;
+  }
+
 }

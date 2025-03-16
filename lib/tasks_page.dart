@@ -1,8 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:crowd_task/data.dart';
 import 'package:crowd_task/request_task_page.dart';
 import 'package:crowd_task/task.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 class TasksPage extends StatefulWidget {
   final List<Task> pendingAnswerTasks;
@@ -22,7 +26,80 @@ class TasksPage extends StatefulWidget {
   TasksPageState createState() => TasksPageState();
 }
 
-class TasksPageState extends State<TasksPage> {
+class TasksPageState extends State<TasksPage> with WidgetsBindingObserver {
+
+  List<Task> pendingTasksList = [];
+  List<Task> acceptedTasksList = [];
+  List<Task> completedTasksList = [];
+  List<Task> declinedTasksList = [];
+  String _filePath = "";
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    pendingTasksList.addAll(widget.pendingAnswerTasks);
+    acceptedTasksList.addAll(widget.acceptedTasks);
+    completedTasksList.addAll(widget.completedFTasks);
+    declinedTasksList.addAll(widget.declinedTasks);
+    getApplicationDocumentsDirectory().then((value) {
+      _filePath = value.path;
+      String _fileName = '$_filePath/pendingTasks.json';
+      File file = File(_fileName);
+      file.readAsString().then((value) {
+        var taskJson = jsonDecode(value) as List;
+        setState(() {
+          pendingTasksList =
+              taskJson.map((taskJson) => Task.fromJson(taskJson)).toList();
+        });
+      }).catchError((onError) {
+        print(onError);
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+        print('AppLifecycleState.paused');
+        var jsonData = json.encode(pendingTasksList);
+        String _fileName = '$_filePath/pendingTasks.json';
+        var file = File(_fileName);
+        file.writeAsString(jsonData);
+        break;
+      case AppLifecycleState.resumed:
+        print('AppLifecycleState.resumed');
+        break;
+      case AppLifecycleState.detached:
+        print('AppLifecycleState.detached');
+        break;
+      case AppLifecycleState.inactive:
+        print('AppLifecycleState.inactive');
+        break;
+      default:
+        print('$state');
+        break;
+    }
+  }
+
+  Future<void> _storePendingTasks() async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/pendingTasks.json');
+      final jsonData = json.encode(widget.pendingAnswerTasks);
+      await file.writeAsString(jsonData);
+    } catch (e) {
+      print('Error storing pending tasks: $e');
+    }
+  }
+
   void acceptTask(Task? task) {
     setState(() {
       widget.pendingAnswerTasks.remove(task);

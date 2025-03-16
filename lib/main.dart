@@ -2,8 +2,6 @@ import 'package:crowd_task/task.dart';
 import 'package:crowd_task/task_data.dart';
 import 'package:crowd_task/tasks_page.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
-import 'package:intl/intl.dart';
 
 void main() => runApp(MyApp());
 
